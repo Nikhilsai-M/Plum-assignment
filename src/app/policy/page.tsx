@@ -16,10 +16,13 @@ export default function PolicyPage() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-normal">Policy Explorer</h1>
+    <div className="page-stack">
+      <div className="page-header">
+        <div>
+        <p className="eyebrow">Policy controls</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-normal sm:text-3xl">Policy Explorer</h1>
         <p className="text-sm text-muted-foreground">{policyTerms.policy_name} - values loaded directly from policy_terms.json.</p>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -35,7 +38,7 @@ export default function PolicyPage() {
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2">
           {categories.map((category) => (
-            <div key={category.name} className="rounded-md border p-4">
+            <div key={category.name} className="rounded-md border bg-white p-4 transition-colors hover:bg-slate-50">
               <div className="flex items-center justify-between gap-3">
                 <p className="font-medium">{category.name}</p>
                 <Badge variant="APPROVED">{formatCurrency(category.limit)}</Badge>
@@ -80,7 +83,7 @@ export default function PolicyPage() {
         </CardHeader>
         <CardContent className="grid gap-2 md:grid-cols-2">
           {policyTerms.exclusions.map((item) => (
-            <div key={item} className="rounded-md border bg-muted/40 p-3 text-sm">{item}</div>
+            <div key={item} className="rounded-md border bg-muted/40 p-3 text-sm leading-6">{item}</div>
           ))}
         </CardContent>
       </Card>
@@ -90,8 +93,8 @@ export default function PolicyPage() {
 
 function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <Card>
-      <CardContent className="flex items-center justify-between p-5">
+    <Card className="min-h-28">
+      <CardContent className="flex h-full items-center justify-between gap-4 p-5">
         <div>
           <p className="text-sm text-muted-foreground">{label}</p>
           <p className="mt-2 text-2xl font-semibold">{value}</p>

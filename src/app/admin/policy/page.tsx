@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge";
 
 export default function AdminPolicyPage() {
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+    <div className="page-stack">
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-semibold tracking-normal">Admin Policy Configuration</h1>
+          <p className="eyebrow">Administration</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-normal sm:text-3xl">Admin Policy Configuration</h1>
           <p className="text-sm text-muted-foreground">Read-only control view for the active OPD policy configuration.</p>
         </div>
         <Badge><Lock size={13} /> Read only</Badge>
@@ -63,9 +64,7 @@ export default function AdminPolicyPage() {
           <CardDescription>Source of truth imported by server/policy.ts.</CardDescription>
         </CardHeader>
         <CardContent>
-          <pre className="max-h-[34rem] overflow-auto rounded-md bg-slate-950 p-4 text-xs text-slate-100">
-            {JSON.stringify(policyTerms, null, 2)}
-          </pre>
+          <pre className="code-panel">{JSON.stringify(policyTerms, null, 2)}</pre>
         </CardContent>
       </Card>
     </div>
@@ -74,7 +73,7 @@ export default function AdminPolicyPage() {
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-md border p-3">
+    <div className="flex items-center justify-between gap-4 rounded-md border bg-white p-3">
       <span className="text-muted-foreground">{label}</span>
       <span className="text-right font-medium">{value}</span>
     </div>

@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ArrowRight, CircleDollarSign, UserRound } from "lucide-react";
 import { apiJson, type ClaimRecord } from "@/lib/api";
-import { formatCurrency } from "@/lib/utils";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 
 export default function ManualReviewPage() {
   const { data } = useQuery({
@@ -17,27 +17,47 @@ export default function ManualReviewPage() {
   const queue = (data?.claims ?? []).filter((record) => record.result.decision === "MANUAL_REVIEW");
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-normal">Manual Review Queue</h1>
-        <p className="text-sm text-muted-foreground">Fraud, low-confidence, high-value, and appeal cases waiting for human adjudication.</p>
+    <div className="page-stack">
+      <div className="page-header">
+        <div>
+          <p className="eyebrow">Human review</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-normal sm:text-3xl">Manual Review Queue</h1>
+          <p className="text-sm text-muted-foreground">Fraud, low-confidence, high-value, and appeal cases waiting for human adjudication.</p>
+        </div>
       </div>
-      <div className="grid gap-4">
+
+      <div className="grid gap-3">
         {queue.map((record) => (
-          <Card key={record.id}>
-            <CardHeader className="flex flex-row items-start justify-between gap-4">
-              <div>
-                <CardTitle>{record.id}</CardTitle>
-                <CardDescription>{record.claim.member_name} · {formatCurrency(record.claim.claim_amount)}</CardDescription>
+          <Card key={record.id} className="transition-colors hover:border-sky-200">
+            <CardContent className="grid gap-4 p-4 sm:grid-cols-[1fr_auto] sm:items-center sm:p-5">
+              <div className="min-w-0 space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <CardTitle className="break-all text-sm">{record.id}</CardTitle>
+                  <Badge variant="MANUAL_REVIEW">Manual review</Badge>
+                  <span className="text-xs text-muted-foreground">{formatDate(record.result.created_at)}</span>
+                </div>
+                <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <UserRound size={15} className="shrink-0" aria-hidden="true" />
+                    <span className="truncate">{record.claim.member_name}</span>
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <CircleDollarSign size={15} className="shrink-0" aria-hidden="true" />
+                    {formatCurrency(record.claim.claim_amount)}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <AlertTriangle className="shrink-0 text-sky-700" size={15} aria-hidden="true" />
+                    Recommended action: review evidence
+                  </span>
+                </div>
+                <p className="line-clamp-2 text-sm text-muted-foreground">
+                  {record.result.flags?.join(", ") ?? record.result.notes}
+                </p>
               </div>
-              <Badge variant="MANUAL_REVIEW">Manual review</Badge>
-            </CardHeader>
-            <CardContent className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-              <div className="flex items-start gap-3 text-sm text-muted-foreground">
-                <AlertTriangle className="mt-0.5 text-sky-700" size={18} />
-                <span>{record.result.flags?.join(", ") ?? record.result.notes}</span>
-              </div>
-              <Link href={`/claims/${record.id}`} className={buttonVariants({ variant: "outline" })}>Open claim</Link>
+              <Link href={`/claims/${record.id}`} className={buttonVariants({ variant: "outline", className: "w-full sm:w-auto" })}>
+                Open claim
+                <ArrowRight size={16} aria-hidden="true" />
+              </Link>
             </CardContent>
           </Card>
         ))}

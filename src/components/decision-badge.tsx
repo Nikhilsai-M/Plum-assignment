@@ -1,3 +1,4 @@
+import { AlertTriangle, CheckCircle2, MinusCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { ClaimDecision } from "../../server/types";
 
@@ -9,5 +10,19 @@ const labels: Record<ClaimDecision, string> = {
 };
 
 export function DecisionBadge({ decision }: { decision: ClaimDecision }) {
-  return <Badge variant={decision}>{labels[decision]}</Badge>;
+  const Icon =
+    decision === "APPROVED"
+      ? CheckCircle2
+      : decision === "REJECTED"
+        ? XCircle
+        : decision === "PARTIAL"
+          ? MinusCircle
+          : AlertTriangle;
+
+  return (
+    <Badge variant={decision}>
+      <Icon size={13} aria-hidden="true" />
+      {labels[decision]}
+    </Badge>
+  );
 }

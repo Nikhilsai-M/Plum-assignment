@@ -2,20 +2,40 @@
 
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { AlertCircle, CheckCircle2, FileSearch, FileText, Pencil, Play, UploadCloud, type LucideIcon } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Circle,
+  ClipboardCheck,
+  FileSearch,
+  FileText,
+  Loader2,
+  Pencil,
+  Play,
+  UploadCloud,
+  type LucideIcon
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { apiJson, extractClaim, submitClaim } from "@/lib/api";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ConfidenceBar } from "@/components/confidence-bar";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ConfidenceBar } from "@/components/confidence-bar";
-import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import type { ClaimInput, ExtractedFields } from "../../../server/types";
 
 type AssignmentCases = {
   test_cases: Array<{ case_id: string; case_name: string; input_data: ClaimInput }>;
+};
+
+type WorkflowStep = {
+  number: number;
+  label: string;
+  description: string;
+  icon: LucideIcon;
 };
 
 const emptyClaim: ClaimInput = {
@@ -27,12 +47,11 @@ const emptyClaim: ClaimInput = {
   documents: {}
 };
 
-const workflowSteps: Array<{ number: string; label: string; icon: LucideIcon }> = [
-  { number: "1", label: "Upload Documents", icon: UploadCloud },
-  { number: "2", label: "AI Extraction Preview", icon: FileSearch },
-  { number: "3", label: "Review and Edit", icon: Pencil },
-  { number: "4", label: "Adjudicate Claim", icon: Play },
-  { number: "5", label: "View Decision", icon: CheckCircle2 }
+const workflowSteps: WorkflowStep[] = [
+  { number: 1, label: "Upload Documents", description: "Load evidence", icon: UploadCloud },
+  { number: 2, label: "Extraction Preview", description: "Verify AI output", icon: FileSearch },
+  { number: 3, label: "Review", description: "Correct claim data", icon: Pencil },
+  { number: 4, label: "Adjudication", description: "Run rules", icon: Play }
 ];
 
 export default function NewClaimPage() {
@@ -53,6 +72,8 @@ export default function NewClaimPage() {
   const selectedCaseOptions = useMemo(() => cases?.test_cases ?? [], [cases]);
   const selectedFiles = Array.from(files ?? []);
   const canAdjudicate = Boolean(extractedJson && reviewConfirmed);
+  const hasEvidence = Boolean(selectedFiles.length || pastedText.trim() || Object.keys(claim.documents ?? {}).length);
+  const currentStep = reviewConfirmed ? 4 : extractedJson ? 3 : hasEvidence ? 2 : 1;
 
   const extractionMutation = useMutation({
     mutationFn: () => {
@@ -109,30 +130,32 @@ export default function NewClaimPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-normal">New OPD Claim</h1>
-        <p className="text-sm text-muted-foreground">Upload documents, preview extraction, review the fields, and then adjudicate.</p>
+    <div className="page-stack">
+      <div className="page-header">
+        <div>
+          <p className="eyebrow">Claim intake</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-normal sm:text-3xl">New OPD Claim</h1>
+          <p className="text-sm text-muted-foreground">Upload documents, preview extraction, review fields, and run adjudication.</p>
+        </div>
+        <Badge variant={canAdjudicate ? "APPROVED" : "MANUAL_REVIEW"}>
+          {canAdjudicate ? "Ready for adjudication" : "Review required"}
+        </Badge>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-5">
-        {workflowSteps.map(({ number, label, icon: Icon }) => (
-          <div key={label} className="flex items-center gap-3 rounded-md border bg-white p-3 text-sm">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
-              <Icon size={16} />
-            </span>
-            <div>
-              <p className="text-xs font-medium text-muted-foreground">Step {number}</p>
-              <p className="font-medium">{label}</p>
-            </div>
-          </div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {workflowSteps.map((step) => (
+          <WorkflowStepCard
+            key={step.number}
+            step={step}
+            status={step.number < currentStep ? "complete" : step.number === currentStep ? "active" : "pending"}
+          />
         ))}
       </div>
 
       {validationErrors.length ? (
-        <div className="rounded-md border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+        <div className="rounded-md border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800" role="alert">
           <div className="flex items-start gap-2">
-            <AlertCircle className="mt-0.5 shrink-0" size={17} />
+            <AlertCircle className="mt-0.5 shrink-0" size={17} aria-hidden="true" />
             <div className="space-y-1">
               {validationErrors.map((error) => (
                 <p key={error}>{error}</p>
@@ -146,28 +169,51 @@ export default function NewClaimPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Step 1 - Upload Documents</CardTitle>
-              <CardDescription>Start with bills, prescriptions, PDFs, images, or pasted OCR text.</CardDescription>
+              <div className="flex items-start gap-3">
+                <StepMark value="1" />
+                <div>
+                  <CardTitle>Upload Documents</CardTitle>
+                  <CardDescription>Start with bills, prescriptions, PDFs, images, pasted OCR text, or an official test case.</CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <Select onChange={(event) => loadCase(event.target.value)} defaultValue="">
-                <option value="" disabled>Load official test case</option>
-                {selectedCaseOptions.map((item) => (
-                  <option key={item.case_id} value={item.case_id}>
-                    {item.case_id} - {item.case_name}
-                  </option>
-                ))}
-              </Select>
-              <Input type="file" multiple accept="image/*,application/pdf,.json,.txt" onChange={(e) => setFiles(e.target.files)} />
-              <FileList files={selectedFiles} />
-              <Textarea
-                placeholder="Paste OCR text, document JSON, prescription text, or bill contents"
-                value={pastedText}
-                onChange={(e) => setPastedText(e.target.value)}
-                className="min-h-36"
-              />
-              <Button type="button" variant="secondary" onClick={() => extractionMutation.mutate()} disabled={extractionMutation.isPending}>
-                <FileSearch size={17} />
+            <CardContent className="space-y-5">
+              <FormField label="Official test case" help="Optional. Loading a case fills the claim and document payload.">
+                <Select onChange={(event) => loadCase(event.target.value)} defaultValue="" aria-label="Load official test case">
+                  <option value="" disabled>Load official test case</option>
+                  {selectedCaseOptions.map((item) => (
+                    <option key={item.case_id} value={item.case_id}>
+                      {item.case_id} - {item.case_name}
+                    </option>
+                  ))}
+                </Select>
+              </FormField>
+
+              <FormField label="Document upload" help="Supported: images, PDF, JSON, and text files.">
+                <div className="rounded-md border border-dashed bg-slate-50 p-4">
+                  <Input
+                    type="file"
+                    multiple
+                    accept="image/*,application/pdf,.json,.txt"
+                    onChange={(e) => setFiles(e.target.files)}
+                    aria-label="Upload claim documents"
+                  />
+                </div>
+              </FormField>
+
+              <UploadFileList files={selectedFiles} />
+
+              <FormField label="Pasted document text" help="Use this for OCR text, bill contents, prescription notes, or document JSON.">
+                <Textarea
+                  placeholder="Paste OCR text, document JSON, prescription text, or bill contents"
+                  value={pastedText}
+                  onChange={(e) => setPastedText(e.target.value)}
+                  className="min-h-36"
+                />
+              </FormField>
+
+              <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={() => extractionMutation.mutate()} disabled={extractionMutation.isPending}>
+                {extractionMutation.isPending ? <Loader2 size={17} className="animate-spin" aria-hidden="true" /> : <FileSearch size={17} aria-hidden="true" />}
                 {extractionMutation.isPending ? "Extracting" : "Extract preview"}
               </Button>
             </CardContent>
@@ -175,23 +221,48 @@ export default function NewClaimPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Step 3 - Review Claim Information</CardTitle>
-              <CardDescription>Confirm member details and edit anything extraction could not infer.</CardDescription>
+              <div className="flex items-start gap-3">
+                <StepMark value="3" />
+                <div>
+                  <CardTitle>Review Claim Information</CardTitle>
+                  <CardDescription>Confirm member details and edit anything extraction could not infer.</CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-5">
               <div className="grid gap-4 sm:grid-cols-2">
-                <Input required placeholder="Member ID" value={claim.member_id} onChange={(e) => updateClaim({ member_id: e.target.value })} />
-                <Input required placeholder="Member name" value={claim.member_name} onChange={(e) => updateClaim({ member_name: e.target.value })} />
-                <Input required type="date" value={claim.treatment_date} onChange={(e) => updateClaim({ treatment_date: e.target.value })} />
-                <Input required type="number" min={1} placeholder="Claim amount" value={claim.claim_amount || ""} onChange={(e) => updateClaim({ claim_amount: Number(e.target.value) })} />
-                <Input placeholder="Hospital/provider" value={claim.hospital ?? ""} onChange={(e) => updateClaim({ hospital: e.target.value })} />
-                <label className="flex h-10 items-center gap-2 rounded-md border px-3 text-sm">
+                <FormField label="Member ID">
+                  <Input required value={claim.member_id} onChange={(e) => updateClaim({ member_id: e.target.value })} aria-label="Member ID" />
+                </FormField>
+                <FormField label="Member name">
+                  <Input required value={claim.member_name} onChange={(e) => updateClaim({ member_name: e.target.value })} aria-label="Member name" />
+                </FormField>
+                <FormField label="Treatment date">
+                  <Input required type="date" value={claim.treatment_date} onChange={(e) => updateClaim({ treatment_date: e.target.value })} aria-label="Treatment date" />
+                </FormField>
+                <FormField label="Claim amount">
+                  <Input
+                    required
+                    type="number"
+                    min={1}
+                    value={claim.claim_amount || ""}
+                    onChange={(e) => updateClaim({ claim_amount: Number(e.target.value) })}
+                    aria-label="Claim amount"
+                  />
+                </FormField>
+                <FormField label="Hospital/provider">
+                  <Input value={claim.hospital ?? ""} onChange={(e) => updateClaim({ hospital: e.target.value })} aria-label="Hospital or provider" />
+                </FormField>
+                <label className="flex h-10 items-center gap-2 self-end rounded-md border bg-background px-3 text-sm font-medium focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
                   <input type="checkbox" checked={Boolean(claim.cashless_request)} onChange={(e) => updateClaim({ cashless_request: e.target.checked })} />
                   Cashless request
                 </label>
               </div>
-              <Textarea value={claimJson} onChange={(e) => setClaimJson(e.target.value)} className="min-h-44 font-mono text-xs" />
-              <Button type="button" variant="outline" onClick={applyClaimJson}>Apply JSON</Button>
+
+              <FormField label="Claim JSON" help="Advanced edit area for the claim payload. Apply JSON to sync the structured form above.">
+                <Textarea value={claimJson} onChange={(e) => setClaimJson(e.target.value)} className="min-h-40 font-mono text-xs leading-5 sm:min-h-44" />
+              </FormField>
+              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={applyClaimJson}>Apply JSON</Button>
             </CardContent>
           </Card>
         </div>
@@ -199,8 +270,13 @@ export default function NewClaimPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Step 2 - AI Extraction Preview</CardTitle>
-              <CardDescription>Gemini extracts fields when available; fallback extraction keeps the workflow moving.</CardDescription>
+              <div className="flex items-start gap-3">
+                <StepMark value="2" />
+                <div>
+                  <CardTitle>Extraction Preview</CardTitle>
+                  <CardDescription>Gemini extracts fields when available; fallback extraction keeps the workflow moving.</CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               {extracted?.extraction_notice ? (
@@ -209,16 +285,19 @@ export default function NewClaimPage() {
                 </div>
               ) : null}
               {extracted?.confidence_score !== undefined && <ConfidenceBar value={extracted.confidence_score} />}
-              <Textarea
-                value={extractedJson}
-                onChange={(e) => {
-                  setExtractedJson(e.target.value);
-                  setReviewConfirmed(false);
-                }}
-                placeholder="Run extraction to populate structured JSON"
-                className="min-h-[28rem] font-mono text-xs"
-              />
-              <label className="flex items-start gap-3 rounded-md border p-3 text-sm">
+              <FormField label="Extracted fields JSON" help="Review, correct, and confirm before adjudication.">
+                <Textarea
+                  value={extractedJson}
+                  onChange={(e) => {
+                    setExtractedJson(e.target.value);
+                    setReviewConfirmed(false);
+                  }}
+                  placeholder="Run extraction to populate structured JSON"
+                  className="min-h-72 border-slate-800 bg-slate-950 font-mono text-xs leading-5 text-slate-100 placeholder:text-slate-500 sm:min-h-[28rem]"
+                  aria-label="Extracted fields JSON"
+                />
+              </FormField>
+              <label className="flex items-start gap-3 rounded-md border bg-slate-50 p-3 text-sm focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
                 <input
                   className="mt-1"
                   type="checkbox"
@@ -233,19 +312,24 @@ export default function NewClaimPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Step 4 - Adjudicate Claim</CardTitle>
-              <CardDescription>The final decision is made by deterministic policy rules, not by the LLM.</CardDescription>
+              <div className="flex items-start gap-3">
+                <StepMark value="4" />
+                <div>
+                  <CardTitle>Adjudication</CardTitle>
+                  <CardDescription>The final decision is made by deterministic policy rules, not by the LLM.</CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-wrap items-center gap-3">
-                <Button type="button" onClick={() => submitMutation.mutate()} disabled={submitMutation.isPending || !canAdjudicate}>
-                  <Play size={17} />
+                <Button type="button" className="w-full sm:w-auto" onClick={() => submitMutation.mutate()} disabled={submitMutation.isPending || !canAdjudicate}>
+                  {submitMutation.isPending ? <Loader2 size={17} className="animate-spin" aria-hidden="true" /> : <Play size={17} aria-hidden="true" />}
                   {submitMutation.isPending ? "Adjudicating" : "Adjudicate claim"}
                 </Button>
                 {!canAdjudicate ? <Badge>Extraction review required</Badge> : <Badge variant="APPROVED">Ready</Badge>}
               </div>
               {(extractionMutation.error || submitMutation.error) && (
-                <p className="text-sm text-destructive">
+                <p className="text-sm text-destructive" role="alert">
                   {(extractionMutation.error ?? submitMutation.error)?.message}
                 </p>
               )}
@@ -257,22 +341,71 @@ export default function NewClaimPage() {
   );
 }
 
-function FileList({ files }: { files: File[] }) {
+function WorkflowStepCard({ step, status }: { step: WorkflowStep; status: "complete" | "active" | "pending" }) {
+  const Icon = step.icon;
+  const StatusIcon = status === "complete" ? CheckCircle2 : status === "active" ? Circle : Circle;
+
+  return (
+    <div
+      className={cn(
+        "flex min-h-24 items-start gap-3 rounded-md border bg-white p-4 text-sm shadow-sm transition-colors",
+        status === "active" && "border-primary/40 bg-accent/60",
+        status === "complete" && "border-emerald-200 bg-emerald-50/70"
+      )}
+      aria-current={status === "active" ? "step" : undefined}
+    >
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border bg-white text-primary">
+        <Icon size={17} aria-hidden="true" />
+      </span>
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Step {step.number}</p>
+          <StatusIcon className={status === "complete" ? "text-emerald-600" : "text-muted-foreground"} size={13} aria-hidden="true" />
+        </div>
+        <p className="mt-1 font-semibold">{step.label}</p>
+        <p className="text-xs text-muted-foreground">{step.description}</p>
+      </div>
+    </div>
+  );
+}
+
+function StepMark({ value }: { value: string }) {
+  return (
+    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">
+      {value}
+    </span>
+  );
+}
+
+function FormField({ label, help, children }: { label: string; help?: string; children: React.ReactNode }) {
+  return (
+    <label className="block space-y-1.5">
+      <span className="field-label">{label}</span>
+      {children}
+      {help ? <span className="field-help">{help}</span> : null}
+    </label>
+  );
+}
+
+function UploadFileList({ files }: { files: File[] }) {
   if (!files.length) {
-    return <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">No files selected yet.</p>;
+    return <p className="rounded-md border border-dashed bg-slate-50 p-3 text-sm text-muted-foreground">No files selected yet.</p>;
   }
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" aria-label="Selected files">
       {files.map((file) => (
-        <div key={`${file.name}-${file.size}`} className="flex items-center justify-between gap-3 rounded-md border p-3 text-sm">
+        <div key={`${file.name}-${file.size}`} className="flex flex-col gap-3 rounded-md border bg-white p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-2">
-            <FileText className="shrink-0 text-primary" size={16} />
+            <FileText className="shrink-0 text-primary" size={16} aria-hidden="true" />
             <div className="min-w-0">
               <p className="truncate font-medium">{file.name}</p>
               <p className="text-xs text-muted-foreground">{file.type || "Unknown type"} - {Math.max(1, Math.round(file.size / 1024))} KB</p>
             </div>
           </div>
-          <Badge variant="APPROVED">Ready</Badge>
+          <Badge variant="APPROVED">
+            <ClipboardCheck size={13} aria-hidden="true" />
+            Ready
+          </Badge>
         </div>
       ))}
     </div>
@@ -303,7 +436,7 @@ function validateSubmission(claim: ClaimInput, extractedJson: string, reviewConf
   return errors;
 }
 
-function buildFormData(claim: ClaimInput, pastedText: string, files: FileList | null, extracted?: ExtractedFields) {
+function buildFormData(claim: ClaimInput, pastedText: string, files: globalThis.FileList | null, extracted?: ExtractedFields) {
   const formData = new FormData();
   formData.append("metadata", JSON.stringify({ ...claim, extracted_fields: extracted }));
   formData.append("pasted_text", pastedText);

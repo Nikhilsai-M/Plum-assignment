@@ -3,23 +3,23 @@
 @tailwind utilities;
 
 :root {
-  --background: 210 33% 98%;
+  --background: 210 24% 98%;
   --foreground: 218 32% 12%;
   --card: 0 0% 100%;
   --card-foreground: 218 32% 12%;
-  --muted: 210 20% 93%;
-  --muted-foreground: 215 16% 42%;
-  --primary: 171 64% 30%;
+  --muted: 214 24% 94%;
+  --muted-foreground: 215 15% 40%;
+  --primary: 174 58% 28%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 41 78% 94%;
-  --secondary-foreground: 31 48% 22%;
-  --accent: 216 88% 96%;
-  --accent-foreground: 218 62% 26%;
+  --secondary: 208 48% 96%;
+  --secondary-foreground: 215 28% 20%;
+  --accent: 190 46% 95%;
+  --accent-foreground: 187 56% 22%;
   --destructive: 0 72% 45%;
   --destructive-foreground: 0 0% 100%;
-  --border: 214 24% 84%;
-  --input: 214 24% 84%;
-  --ring: 171 64% 30%;
+  --border: 214 24% 86%;
+  --input: 214 24% 82%;
+  --ring: 174 58% 28%;
 }
 
 * {
@@ -28,8 +28,16 @@
 
 body {
   min-height: 100vh;
-  background: hsl(var(--background));
+  background:
+    linear-gradient(180deg, hsl(206 35% 97%) 0%, hsl(var(--background)) 260px),
+    hsl(var(--background));
   color: hsl(var(--foreground));
+  text-rendering: optimizeLegibility;
+}
+
+html,
+body {
+  overflow-x: hidden;
 }
 
 button,
@@ -37,4 +45,68 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+@layer base {
+  :focus-visible {
+    outline: none;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.16);
+  }
+}
+
+@layer components {
+  .page-stack {
+    @apply min-w-0 space-y-6 sm:space-y-7;
+  }
+
+  .page-header {
+    @apply min-w-0 flex flex-col justify-between gap-4 sm:flex-row sm:items-start;
+  }
+
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-wide text-muted-foreground;
+  }
+
+  .field-label {
+    @apply text-sm font-medium text-foreground;
+  }
+
+  .field-help {
+    @apply text-xs leading-5 text-muted-foreground;
+  }
+
+  .table-shell {
+    @apply max-w-full overflow-x-auto rounded-md border bg-white;
+  }
+
+  .data-table {
+    @apply w-full min-w-[640px] border-separate border-spacing-0 text-sm;
+  }
+
+  .data-table thead th {
+    @apply sticky top-0 z-10 border-b bg-slate-50/95 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground;
+  }
+
+  .data-table tbody td {
+    @apply border-b px-4 py-3 align-middle;
+  }
+
+  .data-table tbody tr {
+    @apply transition-colors hover:bg-slate-50;
+  }
+
+  .data-table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+
+  .sort-indicator {
+    @apply ml-1 inline-flex text-[10px] text-muted-foreground;
+  }
+
+  .code-panel {
+    @apply max-h-[34rem] w-full max-w-full overflow-auto rounded-md border border-slate-800 bg-slate-950 p-4 font-mono text-xs leading-5 text-slate-100 shadow-inner;
+  }
 }
