@@ -3,37 +3,52 @@
 ```mermaid
 flowchart TD
   A[Claim form and uploads] --> B[Next.js API route]
-  B --> C[Gemini 2.5 Flash extraction]
-  C --> D[Structured JSON fields]
-  D --> E[Deterministic rule engine]
-  E --> F[Eligibility]
-  F --> G[Document validation]
-  G --> H[Coverage verification]
-  H --> I[Limit validation]
-  I --> J[Medical necessity]
-  J --> K[Process checks]
-  K --> L[Fraud detection]
-  L --> M[Decision JSON]
-  M --> N[Supabase tables]
-  N --> O[Dashboard, history, result, manual review UI]
+  B --> C[Gemini extraction or fallback extraction]
+  C --> D[User review of extracted fields]
+  D --> E[Normalized claim payload]
+  E --> F[Deterministic rule engine]
+  F --> G[Eligibility]
+  G --> H[Document validation]
+  H --> I[Coverage validation]
+  I --> J[Limit validation]
+  J --> K[Medical necessity]
+  K --> L[Process checks]
+  L --> M[Fraud detection]
+  M --> N[Decision JSON]
+  N --> O[Supabase or memory storage]
+  O --> P[Dashboard, history, result, manual review UI]
 ```
 
-Gemini is constrained to OCR, document understanding, field extraction, and extraction confidence. It never returns or influences the final claim decision directly. The final decision is made by `server/rules/adjudicator.ts`, which executes modular rule files in the order required by `assignment/adjudication_rules.md`.
+## System Boundaries
+
+- `src/app` contains the Next.js App Router pages and API routes.
+- `src/components` contains shared UI components and small presentation helpers.
+- `server/extraction` contains the Gemini adapter and deterministic fallback extraction.
+- `server/rules` contains the deterministic adjudication engine.
+- `server/storage` abstracts Supabase persistence and in-memory fallback storage.
+- `data` contains runtime policy terms and official test scenarios.
+- `supabase/schema.sql` contains the production persistence schema.
+
+## AI Boundary
+
+Gemini is constrained to OCR, document understanding, field extraction, and extraction confidence. It never approves, rejects, or prices a claim. The final decision is made by `server/rules/adjudicator.ts`.
 
 ## Rule Modules
 
-- `server/rules/eligibility.ts`
-- `server/rules/documentValidation.ts`
-- `server/rules/coverageValidation.ts`
-- `server/rules/limitsValidation.ts`
-- `server/rules/medicalNecessity.ts`
-- `server/rules/processValidation.ts`
-- `server/rules/fraudDetection.ts`
-- `server/rules/adjudicator.ts`
+The adjudicator executes modular rule files in this order:
+
+1. `server/rules/eligibility.ts`
+2. `server/rules/documentValidation.ts`
+3. `server/rules/coverageValidation.ts`
+4. `server/rules/limitsValidation.ts`
+5. `server/rules/medicalNecessity.ts`
+6. `server/rules/processValidation.ts`
+7. `server/rules/fraudDetection.ts`
+8. `server/rules/adjudicator.ts`
 
 ## Decision Shape
 
-Every adjudication returns:
+Every adjudication result includes:
 
 ```json
 {
@@ -47,4 +62,8 @@ Every adjudication returns:
 }
 ```
 
-The application also stores extraction details, deductions, rule explanations, fraud flags, and audit events for operational visibility.
+The application also stores extracted fields, uploaded document metadata, deductions, rule explanations, fraud flags, manual-review metadata, and audit events for reviewer visibility.
+
+## Storage
+
+When `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are configured and the schema exists, data is persisted to Supabase. Without Supabase credentials, or when the schema is missing during local evaluation, the app falls back to in-memory storage for the current server session.

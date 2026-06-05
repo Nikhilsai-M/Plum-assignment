@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import assignmentCases from "../assignment/test_cases.json";
+import testCases from "../data/test_cases.json";
 import { adjudicateClaim } from "../server/rules/adjudicator";
 import type { ClaimInput } from "../server/types";
 
 describe("assignment OPD adjudication cases", () => {
-  for (const testCase of assignmentCases.test_cases) {
+  for (const testCase of testCases.test_cases) {
     it(`${testCase.case_id}: ${testCase.case_name}`, () => {
       const result = adjudicateClaim(testCase.input_data as ClaimInput);
       const expected = testCase.expected_output;

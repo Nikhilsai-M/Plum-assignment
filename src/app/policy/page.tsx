@@ -21,7 +21,7 @@ export default function PolicyPage() {
         <div>
         <p className="eyebrow">Policy controls</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-normal sm:text-3xl">Policy Explorer</h1>
-        <p className="text-sm text-muted-foreground">{policyTerms.policy_name} - values loaded directly from policy_terms.json.</p>
+        <p className="text-sm text-muted-foreground">{policyTerms.policy_name} - values loaded directly from data/policy_terms.json.</p>
         </div>
       </div>
 

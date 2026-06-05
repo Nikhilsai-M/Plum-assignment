@@ -1,4 +1,4 @@
-import policyJson from "../assignment/policy_terms.json";
+import policyJson from "../data/policy_terms.json";
 import type { CoveredMember, PolicyTerms } from "./types";
 
 export const policyTerms = policyJson as PolicyTerms;

@@ -12,9 +12,9 @@ Insurance decisions need predictable policy enforcement. A rule engine provides:
 
 - Reproducible outcomes for the same claim.
 - Clear rejection reasons and triggered rules.
-- Direct mapping to `adjudication_rules.md`.
+- Direct mapping to the deterministic rule modules under `server/rules`.
 - Safer handling of exclusions, limits, waiting periods, and fraud flags.
-- Testability against the official `test_cases.json`.
+- Testability against the official scenarios in `data/test_cases.json`.
 
 The LLM remains useful for OCR and field extraction, but it does not decide approval, rejection, or payable amount.
 
@@ -44,7 +44,7 @@ The LLM remains useful for OCR and field extraction, but it does not decide appr
 
 ## Fraud Detection Strategy
 
-The current system routes suspicious claims to `MANUAL_REVIEW` rather than automatically rejecting them. This matches the assignment priority rule: safety first, but ambiguous fraud signals need a human reviewer.
+The current system routes suspicious claims to `MANUAL_REVIEW` rather than automatically rejecting them. This keeps ambiguous fraud signals in a human-review workflow.
 
 Current triggers include:
 

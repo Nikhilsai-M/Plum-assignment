@@ -1,6 +1,6 @@
 # Official Test Results
 
-Generated on 2026-06-04 from `assignment/test_cases.json`.
+Generated on 2026-06-05 from `data/test_cases.json`.
 
 Command:
 
@@ -14,7 +14,7 @@ Vitest summary:
 
 - Test files: 1 passed
 - Tests: 10 passed
-- Duration: 1.26s
+- Duration: 965ms
 
 | Case | Scenario | Expected | Actual | Result | Reason |
 | --- | --- | --- | --- | --- | --- |
@@ -41,4 +41,4 @@ Build summary:
 
 - Next.js production compile succeeded.
 - TypeScript validation succeeded.
-- Static/dynamic routes generated successfully.
+- Static and dynamic routes generated successfully.

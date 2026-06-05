@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import testCases from "../../../../assignment/test_cases.json";
+import testCases from "../../../../data/test_cases.json";
 
 export async function GET() {
   return NextResponse.json(testCases);
