@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Activity, ClipboardList, FilePlus2, History, Inbox, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import { Activity, ClipboardList, FilePlus2, History, Inbox, ShieldCheck } from "lucide-react";
 import "./globals.css";
 import { Providers } from "./providers";
 
@@ -14,8 +14,7 @@ const nav = [
   { href: "/new-claim", label: "New Claim", icon: FilePlus2 },
   { href: "/claims", label: "History", icon: History },
   { href: "/manual-review", label: "Manual Review", icon: Inbox },
-  { href: "/policy", label: "Policy", icon: ShieldCheck },
-  { href: "/admin/policy", label: "Admin Policy", icon: SlidersHorizontal }
+  { href: "/policy", label: "Policy", icon: ShieldCheck }
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

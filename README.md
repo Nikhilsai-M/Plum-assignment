@@ -14,7 +14,7 @@ The project is built for technical review: AI is used only for document extracti
 - Deterministic OPD adjudication rules for eligibility, documents, coverage, limits, medical necessity, process checks, and fraud review.
 - Claim history with result details, uploaded document metadata, extracted fields, rule explanations, audit trail, and manual-review outcomes.
 - Manual-review queue with approve/reject completion workflow.
-- Policy explorer and read-only admin policy view.
+- Policy explorer for reviewer visibility into active OPD terms.
 - Supabase persistence with in-memory fallback for local demos.
 - Vitest coverage for the official claim scenarios stored in `data/test_cases.json`.
 

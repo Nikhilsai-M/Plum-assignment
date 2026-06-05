@@ -120,4 +120,3 @@ Returns the official reviewer scenarios from `data/test_cases.json` for the New 
 - `/claims/:id`: adjudication result details
 - `/manual-review`: manual-review queue and completion workflow
 - `/policy`: policy explorer loaded from `data/policy_terms.json`
-- `/admin/policy`: read-only admin policy configuration view

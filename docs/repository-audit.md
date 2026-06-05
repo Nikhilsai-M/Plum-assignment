@@ -34,7 +34,6 @@ Assignment handout/reference markdown files were removed from the runtime reposi
 - Claim result page with decision details, confidence, uploaded files, rule explanations, extracted JSON, and audit trail.
 - Manual review queue and approve/reject completion actions.
 - Policy explorer at `/policy`.
-- Read-only admin policy configuration at `/admin/policy`.
 - Supabase schema plus memory fallback.
 - Automated Vitest coverage for `data/test_cases.json`.
 
