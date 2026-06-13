@@ -2,21 +2,16 @@
 
 ```mermaid
 flowchart TD
-  A[Claim form and uploads] --> B[Next.js API route]
-  B --> C[Gemini extraction or fallback extraction]
-  C --> D[User review of extracted fields]
+  A[Claim form + uploads] --> B[Next.js API routes]
+  B --> C[Gemini extraction OR fallback]
+  C --> D[User review / edit fields]
   D --> E[Normalized claim payload]
   E --> F[Deterministic rule engine]
-  F --> G[Eligibility]
-  G --> H[Document validation]
-  H --> I[Coverage validation]
-  I --> J[Limit validation]
-  J --> K[Medical necessity]
-  K --> L[Process checks]
-  L --> M[Fraud detection]
-  M --> N[Decision JSON]
-  N --> O[Supabase or memory storage]
-  O --> P[Dashboard, history, result, manual review UI]
+  F --> G[Eligibility → Documents → Coverage → Limits → Medical → Process → Fraud]
+  G --> H[Decision JSON]
+  H --> I[Supabase OR in-memory storage]
+  I --> J[Dashboard, history, manual review UI]
+
 ```
 
 ## System Boundaries
